@@ -1,0 +1,68 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+%matplotlib inline
+
+
+-----------------
+
+df = pd.read_csv('train.csv')
+test = pd.read_csv('test.csv')
+
+X = df.loc[:,'date_time':'sensor_5']
+
+y1 = df.target_benzene
+y2 = df.target_carbon_monoxide
+y3 = df.target_nitrogen_oxides
+
+date_time = test.date_time
+
+---------------------
+
+
+X['year'] = X.date_time.str[0:4].astype(int)
+X['month'] = X.date_time.str[5:7].astype(int)
+X['day'] = X.date_time.str[8:10].astype(int)
+X['hour'] = X.date_time.str[11:13].astype(int)
+
+X = X.drop('date_time',axis=1)
+X.head()
+
+----------------
+
+test['year'] = test.date_time.str[0:4].astype(int)
+test['month'] = test.date_time.str[5:7].astype(int)
+test['day'] = test.date_time.str[8:10].astype(int)
+test['hour'] = test.date_time.str[11:13].astype(int)
+
+test = test.drop('date_time',axis=1)
+test.head()
+------------------
+
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+poly_reg = PolynomialFeatures(degree = 4)
+X_poly = poly_reg.fit_transform(X)
+lin_reg = LinearRegression()
+
+
+lin_reg.fit(X_poly, y1)
+Y1_pred = lin_reg.predict(poly_reg.fit_transform(test.loc[:,'deg_C':'hour']))
+
+lin_reg.fit(X_poly, y2)
+Y2_pred = lin_reg.predict(poly_reg.fit_transform(test.loc[:,'deg_C':'hour']))
+
+lin_reg.fit(X_poly, y3)
+Y3_pred = lin_reg.predict(poly_reg.fit_transform(test.loc[:,'deg_C':'hour']))
+
+
+-------------------------
+
+
+result = pd.DataFrame(data={'date_time':date_time,'target_carbon_monoxide':Y1_pred, 'target_benzene':Y2_pred,'target_nitrogen_oxides':Y3_pred})
+
+----------------------------------
+
+result.to_csv('submissions_003.csv',index=False)
